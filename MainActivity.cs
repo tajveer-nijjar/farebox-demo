@@ -97,7 +97,7 @@ namespace TryFarebox
 
         private void GotoMDTButton_Click(object sender, EventArgs e)
         {
-            //Sending explicit intents, means this will received only by the apps that are listening to this intent, i.e. AndroidDeviceOwner in this case.
+            //Sending explicit broadcast, means this will received only by the apps that are listening to this intent, i.e. AndroidDeviceOwner in this case.
             var intent = new Intent("cnx.AndroidDeviceOwner.CHANGE_LAUNCHER_APP");
 
             //Getting list of packages (apps) that are listening for above mentioned broadcast.

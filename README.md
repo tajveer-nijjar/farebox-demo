@@ -6,19 +6,19 @@ This app consists of the code that emulates its interaction between AndroidDevic
 
 ## Overall work flow
 
-Three apps will be involved in this workflow - Farebox app, MDT app and AndroidDeviceOwner app.
+Three apps will be involved in this workflow :-
+
+- Farebox app,
+- MDT app and
+- AndroidDeviceOwner app - This app is responsible for switching.
 
 When the tablet starts, Farebox app is shown in Kiosk mode. Clicking on the "Switch" button on the Farebox app brings MDT app in the foreground and now MDT app runs in Kiosk mode. Clicking on "Switch" button on MDT switches the control back to Farebox app. All this switching is handled by AndroidDeviceOwner app.
 
-NOTE
-
-> The app in the repository is created using Xamarin Native. So, it uses C# code. The app uses native android APIs, so C# code can be directly replaced by Java or Kotlin code.
+> NOTE - The app in the repository is created using Xamarin Native. So, it uses C# code. The app uses native android APIs, so C# code can be directly replaced by Java or Kotlin code.
 
 Following are the things that are required to be implemented in Farebox app for this workflow to work. The repository includes sample code for the same.
 
-NOTE:
-
-> File name MainActivity in the documentation denotes the first activity that shows up when the app is launched.
+> NOTE - File name MainActivity in the following documentation denotes the first activity that shows up when the app is launched.
 
 1. In _AndroidManifest.xml_, mark `MainActivity`'s launchMode as `singleInstance`, as following:
 
@@ -54,7 +54,8 @@ DevicePolicyManager devicePolicyManager = (DevicePolicyManager)GetSystemService(
 
 try
 {
-    // IsLockPermitted will be true if AndroidDeviceOwner has set this app for screen pinning using "SetLockTaskPackages()" command.
+    // IsLockPermitted will be true if AndroidDeviceOwner has set this app for screen pinning
+    //   using "SetLockTaskPackages()" command.
     // Checks if this app is allowed to start in Kiosk mode.
     if (_devicePolicyManager.IsLockTaskPermitted(PackageName))
     {
@@ -72,12 +73,12 @@ catch (Exception e)
 }
 ```
 
-4. On click of `Switch` button, execute the following code. `cnx.AndroidDeviceOwner.CHANGE_LAUNCHER_APP` is th aname of the Intent. And `com.connexionz.mdt.droid` is the package name of MDT app.
+4. On click of `Switch` button, execute the following code. `cnx.AndroidDeviceOwner.CHANGE_LAUNCHER_APP` is the name of the broadcast intent that is listened by `AndroidDeviceOwner` app. And `com.connexionz.mdt.droid` is the package name of MDT app.
 
 ```cs
 private void SwitchToMDTButton_Click(object sender, EventArgs e)
 {
-    //Sending explicit intents, means this will received only by the apps that are listening to
+    //Sending explicit broadcast, means this will received only by the apps that are listening to
     // this intent, i.e. AndroidDeviceOwner in this case.
     var intent = new Intent("cnx.AndroidDeviceOwner.CHANGE_LAUNCHER_APP");
 
@@ -96,9 +97,9 @@ private void SwitchToMDTButton_Click(object sender, EventArgs e)
 
     var dpm = (DevicePolicyManager)GetSystemService(DevicePolicyService);
 
+    //Ends kiosk (screen pinning) mode started by StartLockTask().
     if (dpm.IsLockTaskPermitted(PackageName))
     {
-        //Ends kiosk (screen pinning) mode started by StartLockTask().
         this.StopLockTask();
     }
 
