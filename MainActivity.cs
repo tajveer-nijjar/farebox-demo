@@ -46,11 +46,8 @@ namespace TryFarebox
         
             try
             {
-                //Clears all the home button preferences
-                //PackageManager.ClearPackagePreferredActivities(PackageName);
-
-                // IsLockPermitted will be true if it is set in TryAndroidDeviceOwner app using "SetLockTaskPackages()" command.
-                // SetLockTaskPackages() is in DeviceOwner app.
+                // IsLockPermitted will be true if AndroidDeviceOwner has set this app for screen pinning using "SetLockTaskPackages()" command.
+                // Checks if this app is allowed to start in Kiosk mode.
                 if (_devicePolicyManager.IsLockTaskPermitted(PackageName))
                 {
                     //Starts the kiosk (screen pinning) mode.
@@ -78,35 +75,36 @@ namespace TryFarebox
                 this.StopLockTask();
             }
 
-            //Clears all the home button preferences.
-            //Here removing the MDT from being the launcher app.
-            //This will show a menu to ask for selecting a new launcher app.
-            //PackageManager.ClearPackagePreferredActivities(PackageName);
-
             //Showing the launcher activity (launcher page).
-            var homeIntent = new Intent(Intent.ActionMain);
-            homeIntent.AddCategory(Intent.CategoryHome);
-            var infoList = PackageManager.QueryIntentActivities(homeIntent, PackageInfoFlags.MatchDefaultOnly).ToList();
+            var defaultLauncherIntent = new Intent(Intent.ActionMain);
+            defaultLauncherIntent.AddCategory(Intent.CategoryHome);
+            var infoList = PackageManager.QueryIntentActivities(defaultLauncherIntent, PackageInfoFlags.MatchDefaultOnly).ToList();
             foreach (var info in infoList)
             {
                 if (!PackageName.Equals(info.ActivityInfo.PackageName))
                 {
                     // This is the first match that isn't my package, so copy the
                     //  package and class names into to the HOME Intent
-                    homeIntent.SetClassName(info.ActivityInfo.PackageName, info.ActivityInfo.Name);
+                    defaultLauncherIntent.SetClassName(info.ActivityInfo.PackageName, info.ActivityInfo.Name);
                     break;
                 }
             }
-            StartActivity(homeIntent);
-            Finish();
+            StartActivity(defaultLauncherIntent);
+            
+            //This Finish() must finish the main loading activity.
+            this.Finish();
         }
 
         private void GotoMDTButton_Click(object sender, EventArgs e)
         {
-            //Sending explicit intents, means this will received only by the apps that are listening to this.
+            //Sending explicit intents, means this will received only by the apps that are listening to this intent, i.e. AndroidDeviceOwner in this case.
             var intent = new Intent("cnx.AndroidDeviceOwner.CHANGE_LAUNCHER_APP");
-            var infos = PackageManager.QueryBroadcastReceivers(intent, 0).ToList(); //Getting list of packages (apps) that are listening for above mentioned broadcast.
 
+            //Getting list of packages (apps) that are listening for above mentioned broadcast.
+            var infos = PackageManager.QueryBroadcastReceivers(intent, 0).ToList(); 
+
+            //Sending explicit broadcast to all the apps that are listening to the above mentioned intent. 
+            //In this case it will be AndroidDeviceOwner app only.
             foreach (var info in infos)
             {
                 var componentName = new ComponentName(info.ActivityInfo.PackageName, info.ActivityInfo.Name);
@@ -122,7 +120,6 @@ namespace TryFarebox
                 //Ends kiosk (screen pinning) mode started by StartLockTask().
                 this.StopLockTask();
             }
-            //PackageManager.ClearPackagePreferredActivities(PackageName);
 
             FinishAndRemoveTask();
         }
