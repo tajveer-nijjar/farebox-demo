@@ -21,7 +21,7 @@ namespace TryFarebox
     public class MainActivity : AppCompatActivity
     {
         private DevicePolicyManager _devicePolicyManager;
-        private Button _exitAppButton, _gotoMDTButton;
+        private Button _exitAppButton, _gotoMDTButton, _driverLoginStatusChangedButton;
         
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -31,11 +31,40 @@ namespace TryFarebox
 
             _exitAppButton = FindViewById<Button>(Resource.Id.exitAppButton);
             _gotoMDTButton = FindViewById<Button>(Resource.Id.gotoMDTButton);
+            _driverLoginStatusChangedButton = FindViewById<Button>(Resource.Id.driverLoginStatusChangedButton);
+            
 
             _exitAppButton.Click += ExitAppButton_Click;
             _gotoMDTButton.Click += GotoMDTButton_Click;
+            _driverLoginStatusChangedButton.Click += DriverLoginStatusChangedButton_Click;
+
+        }
+
+        private void DriverLoginStatusChangedButton_Click(object sender, EventArgs e)
+        {
+            //Creating explicit broadcast. Means this broadcast will be received only by the apps that are listening for it.
+            var intent = new Intent("com.OCU.DRIVER_LOGIN_STATUS_CHANGED");
+
+            //Getting list of packages (apps) that are listening for above mentioned broadcast.
+            //  In this case it will be only 1.
+            var packages = this.PackageManager.QueryBroadcastReceivers(intent, 0).ToList();
+
+            foreach (var package in packages)
+            {
+                //package.ActivityInfo.PackageName is the name of the app package that will receive this broadcast (eg: com.connexionz.mdt.droid)
+                //package.ActivityInfo.Name is the name of the class in the receiving app that will receive this broadcast (eg: com.connexionz.mdt.droid.DriverLoginStatusChanged).
+                var componentName = new ComponentName(package.ActivityInfo.PackageName, package.ActivityInfo.Name);
+                intent.SetComponent(componentName);
+                intent.PutExtra("data", "{\"flag\":\"LOGGED_IN\",\"driverId\":\"123\"}");
+                this.SendBroadcast(intent);
+            }
 
 
+
+            //var intent = new Intent();
+            //intent.SetAction("com.OCU.DRIVER_LOGIN_STATUS_CHANGED");
+            //intent.PutExtra("data", "{\"flag\":\"LOGGED_IN\",\"driverId\":\"123\"}");
+            //SendBroadcast(intent);
         }
 
         protected override void OnResume()
@@ -115,9 +144,9 @@ namespace TryFarebox
 
             var dpm = (DevicePolicyManager)GetSystemService(DevicePolicyService);
 
+            //Ends kiosk (screen pinning) mode started by StartLockTask().
             if (dpm.IsLockTaskPermitted(PackageName))
             {
-                //Ends kiosk (screen pinning) mode started by StartLockTask().
                 this.StopLockTask();
             }
 

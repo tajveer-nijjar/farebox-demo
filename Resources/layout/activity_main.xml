@@ -35,4 +35,10 @@
         android:layout_height="wrap_content"/>
 
 
+    <Button
+        android:id="@+id/driverLoginStatusChangedButton"
+        android:text="Send Driver Login Status Changed"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
 </LinearLayout>
