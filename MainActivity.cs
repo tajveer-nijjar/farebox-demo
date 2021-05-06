@@ -58,13 +58,6 @@ namespace TryFarebox
                 intent.PutExtra("data", "{\"flag\":\"LOGGED_IN\",\"driverId\":\"123\"}");
                 this.SendBroadcast(intent);
             }
-
-
-
-            //var intent = new Intent();
-            //intent.SetAction("com.OCU.DRIVER_LOGIN_STATUS_CHANGED");
-            //intent.PutExtra("data", "{\"flag\":\"LOGGED_IN\",\"driverId\":\"123\"}");
-            //SendBroadcast(intent);
         }
 
         protected override void OnResume()
