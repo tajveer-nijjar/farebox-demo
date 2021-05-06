@@ -152,7 +152,7 @@ private void ExitAppButton_Click(object sender, EventArgs e)
 The following explains how to send explicit broadcasts, that will be received by MDT app.
 
 ```cs
- private void DriverLoginStatusChangedButton_Click(object sender, EventArgs e)
+private void DriverLoginStatusChangedButton_Click(object sender, EventArgs e)
 {
     //Creating explicit broadcast. Means this broadcast will be received only by the apps that are listening for it.
     var intent = new Intent("com.OCU.DRIVER_LOGIN_STATUS_CHANGED");
