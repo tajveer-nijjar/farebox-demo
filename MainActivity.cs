@@ -21,42 +21,59 @@ namespace TryFarebox
     public class MainActivity : AppCompatActivity
     {
         private DevicePolicyManager _devicePolicyManager;
-        private Button _exitAppButton, _gotoMDTButton, _driverLoginStatusChangedButton;
+        private Button _exitAppButton, _gotoMDTButton, _driverLoginStatusChangedButton;//, _sendBootCompletedBroadcastButton;
         
         protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
+            RequestedOrientation = Android.Content.PM.ScreenOrientation.Landscape;
+
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
             SetContentView(Resource.Layout.activity_main);
 
             _exitAppButton = FindViewById<Button>(Resource.Id.exitAppButton);
             _gotoMDTButton = FindViewById<Button>(Resource.Id.gotoMDTButton);
             _driverLoginStatusChangedButton = FindViewById<Button>(Resource.Id.driverLoginStatusChangedButton);
+            //_sendBootCompletedBroadcastButton = FindViewById<Button>(Resource.Id.sendBootCompletedBroadcastButton);
             
-
             _exitAppButton.Click += ExitAppButton_Click;
             _gotoMDTButton.Click += GotoMDTButton_Click;
             _driverLoginStatusChangedButton.Click += DriverLoginStatusChangedButton_Click;
-
+            //_sendBootCompletedBroadcastButton.Click += SendBootCompletedBroadcastButton_Click;
         }
+
+        //private void SendBootCompletedBroadcastButton_Click(object sender, EventArgs e)
+        //{
+        //    var intent = new Intent("android.intent.action.BOOT_COMPLETED");
+        //    SendBroadcast(intent);
+        //}
 
         private void DriverLoginStatusChangedButton_Click(object sender, EventArgs e)
         {
             //Creating explicit broadcast. Means this broadcast will be received only by the apps that are listening for it.
             var intent = new Intent("com.OCU.DRIVER_LOGIN_STATUS_CHANGED");
+            intent.PutExtra("data", "{\"flag\":\"LOGGED_IN\",\"driverId\":\"1255534\"}");
 
             //Getting list of packages (apps) that are listening for above mentioned broadcast.
             //  In this case it will be only 1.
             var packages = this.PackageManager.QueryBroadcastReceivers(intent, 0).ToList();
 
-            foreach (var package in packages)
+            //If in MDT the broadcast is registered dynamically
+            if(packages.Count == 0)
             {
-                //package.ActivityInfo.PackageName is the name of the app package that will receive this broadcast (eg: com.connexionz.mdt.droid)
-                //package.ActivityInfo.Name is the name of the class in the receiving app that will receive this broadcast (eg: com.connexionz.mdt.droid.DriverLoginStatusChanged).
-                var componentName = new ComponentName(package.ActivityInfo.PackageName, package.ActivityInfo.Name);
-                intent.SetComponent(componentName);
-                intent.PutExtra("data", "{\"flag\":\"LOGGED_IN\",\"driverId\":\"123\"}");
-                this.SendBroadcast(intent);
+                ApplicationContext.SendBroadcast(intent);
+            }
+            //If in MDT the broadcast is registered in AndroidManifest
+            else
+            {
+                foreach (var package in packages)
+                {
+                    //package.ActivityInfo.PackageName is the name of the app package that will receive this broadcast (eg: com.connexionz.mdt.droid)
+                    //package.ActivityInfo.Name is the name of the class in the receiving app that will receive this broadcast (eg: com.connexionz.mdt.droid.DriverLoginStatusChanged).
+                    var componentName = new ComponentName(package.ActivityInfo.PackageName, package.ActivityInfo.Name);
+                    intent.SetComponent(componentName);
+                    ApplicationContext.SendBroadcast(intent);
+                }
             }
         }
 
@@ -125,7 +142,7 @@ namespace TryFarebox
             //Getting list of packages (apps) that are listening for above mentioned broadcast.
             var infos = PackageManager.QueryBroadcastReceivers(intent, 0).ToList(); 
 
-            //Sending explicit broadcast to all the apps that are listening to the above mentioned intent. 
+            //Sending explicit broadcast to all the apps that are listening to the above mentioned intent.
             //In this case it will be AndroidDeviceOwner app only.
             foreach (var info in infos)
             {
